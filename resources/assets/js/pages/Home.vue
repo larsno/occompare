@@ -78,18 +78,15 @@
         skillMap = occupation_1.reduce(mergeSkillsTo("value_1"), skillMap);
         skillMap = occupation_2.reduce(mergeSkillsTo("value_2"), skillMap);
         const skills = Object.values(skillMap).map(includeMaxValue).sort(sortByMaxValue);
-        console.log("SKILLS", skills);
         return skills;
     }
     function calculateMatch(skills) {
         const sum = skills.reduce((sum, { value_1 = 0, value_2 = 0, max_value = 0 }) => {
-            console.log(value_1, value_2, max_value)
             // The difference in a skill's importance should be scaled by the size of the importance
             sum.ofDifference += (value_1 === 0 || value_2 === 0 ? 100 : Math.abs(value_1 - value_2)) * max_value;
             sum.ofMaxValue += max_value;
             return sum;
         }, { ofDifference: 0, ofMaxValue: 0 });
-        console.log(sum, skills);
         return Math.round(100 - sum.ofDifference / sum.ofMaxValue);
     }
 
@@ -114,12 +111,10 @@
                     occupation_1: this.occupation_1,
                     occupation_2: this.occupation_2
                 }).then((response) => {
-                    console.log("COMPARE", response);
                     this.loading = false;
                     this.skills = mergeSkills(response.data.occupation_1, response.data.occupation_2);
                     this.match = calculateMatch(this.skills); // response.data.match;
                 }).catch((e) => {
-                    console.log("COMPARE", e);
                     this.loading = false;
                 });
             }
