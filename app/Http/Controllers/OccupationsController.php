@@ -31,6 +31,7 @@ class OccupationsController extends BaseController
         $occupation_1 = $this->occparser->get($request->get('occupation_1'));
         $occupation_2 = $this->occparser->get($request->get('occupation_2'));
 
+        // I have implemented it on the client side
         /** IMPLEMENT COMPARISON **/
         $match = 68;
         /** IMPLEMENT COMPARISON **/

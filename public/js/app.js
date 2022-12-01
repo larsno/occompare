@@ -52509,7 +52509,68 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
+
+
+var mergeSkillsTo = function mergeSkillsTo(field) {
+    return function (skillMap, _ref) {
+        var label = _ref.label,
+            value = _ref.value,
+            description = _ref.description;
+
+        if (skillMap[label]) skillMap[label][field] = +value || 0;else {
+            skillMap[label] = { label: label, description: description };
+            skillMap[label][field] = +value || 0;
+        }
+        return skillMap;
+    };
+};
+var sortByMaxValue = function sortByMaxValue(_ref2, _ref3) {
+    var maxA = _ref2.max_value;
+    var maxB = _ref3.max_value;
+    return maxA > maxB ? -1 : maxA < maxB ? 1 : 0;
+};
+function includeMaxValue(skill) {
+    skill.max_value = Math.max(skill.value_1 || 0, skill.value_2 || 0);
+    return skill;
+}
+function mergeSkills(occupation_1, occupation_2) {
+    var skillMap = {};
+    skillMap = occupation_1.reduce(mergeSkillsTo("value_1"), skillMap);
+    skillMap = occupation_2.reduce(mergeSkillsTo("value_2"), skillMap);
+    var skills = Object.values(skillMap).map(includeMaxValue).sort(sortByMaxValue);
+    console.log("SKILLS", skills);
+    return skills;
+}
+function calculateMatch(skills) {
+    var sum = skills.reduce(function (sum, _ref4) {
+        var _ref4$value_ = _ref4.value_1,
+            value_1 = _ref4$value_ === undefined ? 0 : _ref4$value_,
+            _ref4$value_2 = _ref4.value_2,
+            value_2 = _ref4$value_2 === undefined ? 0 : _ref4$value_2,
+            _ref4$max_value = _ref4.max_value,
+            max_value = _ref4$max_value === undefined ? 0 : _ref4$max_value;
+
+        console.log(value_1, value_2, max_value);
+        // The difference in a skill's importance should be scaled by the size of the importance
+        sum.ofDifference += (value_1 === 0 || value_2 === 0 ? 100 : Math.abs(value_1 - value_2)) * max_value;
+        sum.ofMaxValue += max_value;
+        return sum;
+    }, { ofDifference: 0, ofMaxValue: 0 });
+    console.log(sum, skills);
+    return Math.round(100 - sum.ofDifference / sum.ofMaxValue);
+}
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     name: 'home-page',
@@ -52521,7 +52582,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             loading: false,
             occupation_1: null,
             occupation_2: null,
-            match: null
+            match: null,
+            skills: []
         };
     },
 
@@ -52534,11 +52596,24 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
                 occupation_1: this.occupation_1,
                 occupation_2: this.occupation_2
             }).then(function (response) {
+                console.log("COMPARE", response);
                 _this.loading = false;
-                _this.match = response.data.match;
-            }).catch(function () {
+                _this.skills = mergeSkills(response.data.occupation_1, response.data.occupation_2);
+                _this.match = calculateMatch(_this.skills); // response.data.match;
+            }).catch(function (e) {
+                console.log("COMPARE", e);
                 _this.loading = false;
             });
+        }
+    },
+    watch: {
+        occupation_1: function occupation_1() {
+            this.match = null;
+            this.skills = [];
+        },
+        occupation_2: function occupation_2() {
+            this.match = null;
+            this.skills = [];
         }
     }
 });
@@ -53589,25 +53664,6 @@ var render = function() {
               1
             ),
             _vm._v(" "),
-            _c(
-              "div",
-              { staticClass: "col-md-5" },
-              [
-                _c("label", [_vm._v("Occupation 2")]),
-                _vm._v(" "),
-                _c("select-occupation", {
-                  model: {
-                    value: _vm.occupation_2,
-                    callback: function($$v) {
-                      _vm.occupation_2 = $$v
-                    },
-                    expression: "occupation_2"
-                  }
-                })
-              ],
-              1
-            ),
-            _vm._v(" "),
             _c("div", { staticClass: "col-md-2" }, [
               _c(
                 "button",
@@ -53635,7 +53691,26 @@ var render = function() {
                 ],
                 2
               )
-            ])
+            ]),
+            _vm._v(" "),
+            _c(
+              "div",
+              { staticClass: "col-md-5" },
+              [
+                _c("label", [_vm._v("Occupation 2")]),
+                _vm._v(" "),
+                _c("select-occupation", {
+                  model: {
+                    value: _vm.occupation_2,
+                    callback: function($$v) {
+                      _vm.occupation_2 = $$v
+                    },
+                    expression: "occupation_2"
+                  }
+                })
+              ],
+              1
+            )
           ])
         ])
       ])
@@ -53645,13 +53720,49 @@ var render = function() {
       "div",
       { staticClass: "row" },
       [
-        _vm.match && !_vm.loading
+        _vm.match !== null && !_vm.loading
           ? [
               _c("div", { staticClass: "col-12 text-center" }, [
-                _c("h1", [_vm._v(_vm._s(_vm.match) + "%")])
-              ])
+                _c("h1", [_vm._v("Skill Match " + _vm._s(_vm.match) + "%")])
+              ]),
+              _vm._v(" "),
+              _vm.skills && !_vm.loading
+                ? _c("div", { staticClass: "col-12" }, [
+                    _c(
+                      "table",
+                      { staticClass: "table table-striped table-sm" },
+                      [
+                        _c(
+                          "tbody",
+                          _vm._l(_vm.skills, function(skill) {
+                            return _c("tr", [
+                              _c(
+                                "td",
+                                { staticClass: "col-md-4 text-center" },
+                                [_vm._v(_vm._s(skill.value_1))]
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "td",
+                                { staticClass: "table-success text-center" },
+                                [_vm._v(_vm._s(skill.label))]
+                              ),
+                              _vm._v(" "),
+                              _c(
+                                "td",
+                                { staticClass: "col-md-4 text-center" },
+                                [_vm._v(_vm._s(skill.value_2))]
+                              )
+                            ])
+                          }),
+                          0
+                        )
+                      ]
+                    )
+                  ])
+                : _vm._e()
             ]
-          : !_vm.match && !_vm.loading
+          : _vm.match === null && !_vm.loading
           ? [
               _c("div", { staticClass: "col-12 text-center" }, [
                 _vm._v(
@@ -53951,7 +54062,7 @@ var render = function() {
     "div",
     { staticClass: "body", style: { "--brand-color": "#fbb040" } },
     [
-      _c("top-bar"),
+      _c("top-bar", { attrs: { name: "Lars Norved" } }),
       _vm._v(" "),
       _c("transition", { attrs: { name: "fade" } }, [_c("router-view")], 1)
     ],
