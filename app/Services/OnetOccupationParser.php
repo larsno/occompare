@@ -40,13 +40,14 @@ class OnetOccupationParser implements OccupationParser
         ]);
 
         $items = [];
-        $rows = $dom->find('.section_' . $this->getScope() . ' table tr');
+        // The dom has changed at https://www.onetonline.org/link/details/...
+        $rows = $dom->find('#' . $this->getScope() . ' table tr');
         foreach ($rows as $row) {
-            $value_el = $row->find('.report2a b');
+            $value_el = $row->find('.me-2');
             $value = $value_el->count() ? ($value_el[0])->text : null;
-            $label_el = $row->find('.report2 .moreinfo b');
+            $label_el = $row->find('.order-2 b');
             $label = $label_el->count() ? ($label_el[0])->text : null;
-            $description_el = $row->find('.report2 .moreinfo');
+            $description_el = $row->find('.order-2');
             $description = $description_el->count() ? ($description_el[0])->text : null;
 
             if ($value && $label) {
